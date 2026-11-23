@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Feedback de Liderança · Sudati</title>
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="css/estilo.css">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+</head>
+<body>
+<canvas id="topo" aria-hidden="true"></canvas>
+<div class="glow" aria-hidden="true"></div>
+<div class="wrap">
+  <div class="progress" id="progress" hidden><div class="track"><div class="fill" id="pfill"></div></div><span class="num" id="ptxt">0%</span></div>
+  <header class="hero">
+    <img class="logo" alt="Sudati MDF" src="logo.png">
+    <span class="eyebrow">Programa de desenvolvimento de líderes</span>
+    <h1 id="titulo">Feedback para <em>Luiany</em></h1>
+    <p class="lead">Sua visão vai contribuir para o desenvolvimento da Luiany como supervisora da Qualidade. A pesquisa é anônima: o RH reúne todas as respostas em um levantamento geral, e ela recebe apenas o resultado consolidado, nunca uma resposta individual. Fique à vontade para ser sincero(a) e responda pensando em situações que você viu acontecer.</p>
+    <div class="chips">
+      <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Cerca de 20 minutos</span>
+      <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Anônimo</span>
+      <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 12h16M12 4v16"/></svg>Perguntas sob medida para você</span>
+    </div>
+  </header>
+
+  <section id="v-form">
+    <form id="form" novalidate></form>
+    <div class="card done" id="done" hidden></div>
+  </section>
+</div>
+<script src="js/config.js"></script>
+<script src="js/perguntas.js"></script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore,collection,addDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app=initializeApp(window.SITE_CONFIG.firebase);
+const db=getFirestore(app);
+window.fbEnviar=r=>addDoc(collection(db,"respostas"),{...r,criadoEm:serverTimestamp()});
+</script>
+<script>
+const ICONES={
+ equipe:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c2.8 0 5 2.2 5 5"/></svg>',
+ lateral:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>',
+ gestor:'<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg>'
+};
+const SUBT={equipe:"Trabalho no time da Qualidade, liderado por ela",lateral:"Sou supervisor de outra área ou trabalho junto com a Qualidade",gestor:"Ela responde diretamente a mim"};
+const NOMEG={equipe:"Sou da equipe dela",lateral:"Sou par ou de outra área",gestor:"Sou gestor(a) dela"};
+function setTitulo(){$("#titulo").innerHTML="Feedback para <em>"+esc(NOME_AVALIADA)+"</em>"}
+
+function renderForm(){
+  setTitulo();
+  $("#form").innerHTML=`
+  <div class="part">
+    <span class="eyebrow">Para começar</span>
+    <div class="q codigo"><label class="lbl" for="codigo">Código de acesso</label><span class="hint">Está na mensagem de convite que você recebeu do RH.</span><input id="codigo" autocomplete="off" autocapitalize="characters" placeholder="Digite o código"></div>
+    <div class="q"><span class="lbl">Qual é a sua relação com ela?</span>
+    <div class="grupos">${GRUPOS.map((g,i)=>`<input type="radio" name="grupo" id="g${i}" value="${g.v}"><label for="g${i}">${ICONES[g.set]}<b>${NOMEG[g.set]}</b><span>${SUBT[g.set]}</span></label>`).join("")}</div>
+    <span class="hint">As perguntas mudam conforme a sua escolha.</span></div>
+  </div>
+  <div id="qs" style="display:grid;gap:18px"></div>`;
+  $("#form").onchange=e=>{const mq=e.target.name?.match(/^q_(.+)$/);if(mq){const q=TODOS_Q[mq[1]];const lb=$("#exl_"+mq[1]);if(q&&lb&&!q.row){const ob=exigeEx(q,e.target.value);lb.textContent=ob?"Conte o que aconteceu (obrigatório para essa resposta)":(q.ex||"Quer contar um exemplo?")+" (opcional)";lb.style.color=ob?"var(--hyp)":"";lb.style.fontWeight=ob?"600":""}}if(e.target.name==="grupo"){renderQs(setDe(e.target.value));$("#progress").hidden=false;setTimeout(()=>$("#qs").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}),60)}progresso()};
+  $("#form").oninput=progresso;
+  $("#form").onsubmit=enviar;
+}
+
+function renderQs(set){
+  let n=0;
+  $("#qs").innerHTML=`
+  <div class="part">
+    <div class="q"><span class="lbl">Com que frequência vocês trabalham juntos?</span><div class="opts row">${CONTATO.map((g,i)=>`<input type="radio" name="contato" id="k${i}" value="${g}"><label for="k${i}">${g}</label>`).join("")}</div></div>
+  </div>
+  ${SETS[set].map(p=>`<div class="part"><span class="eyebrow">${p.t}</span>${p.qs.map(q=>{n++;return q.tipo==="txt"
+    ?`<label class="q" for="q_${q.id}"><span class="lbl"><span class="qn">${String(n).padStart(2,"0")}</span>${q.l}</span>${q.h?`<span class="hint">${q.h}</span>`:""}${q.curto?`<input id="q_${q.id}" placeholder="Escreva aqui">`:`<textarea id="q_${q.id}" placeholder="Escreva aqui"></textarea>`}</label>`
+    :`<div class="q"><span class="lbl"><span class="qn">${String(n).padStart(2,"0")}</span>${q.l}</span>${q.h?`<span class="hint">${q.h}</span>`:""}<div class="opts${q.row?" scale":""}">${opcoes(q).map((o,i)=>`<input type="radio" name="q_${q.id}" id="q_${q.id}_${i}" value="${o}"><label for="q_${q.id}_${i}">${o}</label>`).join("")}</div>${q.row?'<div class="scale-legend"><span>0 · nada</span><span>10 · totalmente</span></div>':""}
+      <label class="hint" for="ex_${q.id}" id="exl_${q.id}">${q.ex||"Quer contar um exemplo?"} (opcional)</label><textarea class="ex" id="ex_${q.id}" placeholder="O que aconteceu, quando, qual foi o efeito"></textarea></div>`}).join("")}</div>`).join("")}
+  <div class="envio"><p class="err" id="ferr" hidden></p>
+  <button class="btn" type="submit">Enviar feedback <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>`;
+}
+
+function progresso(){
+  const g=document.querySelector('[name="grupo"]:checked');if(!g)return;
+  const qs=todasDe(setDe(g.value)).filter(q=>!q.opc);
+  let ok=document.querySelector('[name="contato"]:checked')?1:0;
+  qs.forEach(q=>{const ch=document.querySelector(`[name="q_${q.id}"]:checked`);if(q.tipo==="opt"?(ch&&(!exigeEx(q,ch.value)||($("#ex_"+q.id)?.value.trim().length||0)>=10)):(($("#q_"+q.id)?.value.trim().length||0)>=(q.curto?3:10)))ok++});
+  const pct=Math.round(ok/(qs.length+1)*100);
+  $("#pfill").style.width=pct+"%";$("#ptxt").textContent=pct+"%";
+}
+
+/* linhas topográficas, como na identidade da Sudati (marching squares sobre um campo suave) */
+function topo(){
+  const c=$("#topo"),x=c.getContext("2d"),dpr=Math.min(devicePixelRatio||1,2);
+  const W=c.width=innerWidth*dpr,H=c.height=innerHeight*dpr,s=10*dpr;
+  const cols=Math.ceil(W/s)+1,rows=Math.ceil(H/s)+1,S=Math.max(W,H);
+  const f=(px,py)=>{px/=S;py/=S;return Math.sin(px*5.2+Math.sin(py*4.1)*1.6)+Math.cos(py*4.6-Math.cos(px*3.3)*1.8)+.55*Math.sin((px*1.3+py)*7.4)};
+  const v=new Float32Array(cols*rows);
+  for(let j=0;j<rows;j++)for(let i=0;i<cols;i++)v[j*cols+i]=f(i*s,j*s);
+  x.clearRect(0,0,W,H);x.lineWidth=dpr;x.lineCap="round";
+  for(let k=-2.6;k<=2.6;k+=.2){
+    x.strokeStyle=`rgba(170,205,218,${.045+.035*(Math.round(k*5)%5===0)})`;x.beginPath();
+    for(let j=0;j<rows-1;j++)for(let i=0;i<cols-1;i++){
+      const a=v[j*cols+i]-k,b=v[j*cols+i+1]-k,cc=v[(j+1)*cols+i+1]-k,d=v[(j+1)*cols+i]-k,X=i*s,Y=j*s,p=[];
+      if(a*b<0)p.push([X+a/(a-b)*s,Y]);
+      if(b*cc<0)p.push([X+s,Y+b/(b-cc)*s]);
+      if(cc*d<0)p.push([X+s-cc/(cc-d)*s,Y+s]);
+      if(d*a<0)p.push([X,Y+s-d/(d-a)*s]);
+      for(let m=0;m+1<p.length;m+=2){x.moveTo(p[m][0],p[m][1]);x.lineTo(p[m+1][0],p[m+1][1])}
+    }
+    x.stroke();
+  }
+}
+try{topo()}catch(e){}let tt;addEventListener("resize",()=>{clearTimeout(tt);tt=setTimeout(()=>{try{topo()}catch(e){}},200)});
+
+
+async function enviar(e){
+  e.preventDefault();
+  const err=$("#ferr");if(!err)return;err.hidden=true;
+  const val=n=>document.querySelector(`[name="${n}"]:checked`)?.value||"";
+  const r={grupo:val("grupo"),contato:val("contato"),codigo:$("#codigo").value.trim().toUpperCase()};
+  const set=setDe(r.grupo);
+  const falta=[];
+  if(!r.codigo)falta.push("o código de acesso (está no convite)");
+  if(!r.contato)falta.push("a frequência de contato");
+  todasDe(set).forEach((q,i)=>{
+    if(q.tipo==="txt"){const v=$("#q_"+q.id).value.trim();r[q.id]=v;if(!q.opc&&v.length<(q.curto?3:10))falta.push("a pergunta "+(i+1))}
+    else{r[q.id]=val("q_"+q.id);r[q.id+"_ex"]=$("#ex_"+q.id).value.trim();if(!r[q.id])falta.push("a pergunta "+(i+1));else if(exigeEx(q,r[q.id])&&r[q.id+"_ex"].length<10)falta.push("o exemplo da pergunta "+(i+1))}
+  });
+  if(falta.length){err.textContent="Falta responder: "+falta.join(", ")+". Nas perguntas abertas, e no exemplo quando ele é pedido, escreva pelo menos uma frase.";err.hidden=false;return}
+  const btn=e.submitter||$("#form button[type=submit]");if(btn)btn.disabled=true;
+  try{await window.fbEnviar(r);$("#form").hidden=true;$("#progress").hidden=true;const d=$("#done");d.hidden=false;
+    d.innerHTML=`<svg class="ok" viewBox="0 0 84 84"><circle cx="42" cy="42" r="38"/><path d="M27 43l10 10 20-22"/></svg><h2>Obrigado!</h2><p class="muted" style="max-width:44ch">Seu feedback foi enviado e vai ajudar a ${esc(NOME_AVALIADA)} a crescer como líder. Você já pode fechar esta página.</p>`;d.scrollIntoView({block:"center"});}
+  catch(x){if(btn)btn.disabled=false;err.textContent=x&&x.code==="permission-denied"?"O código de acesso não confere. Confira o código no convite e tente de novo.":"Não foi possível enviar agora. Verifique a internet e tente de novo.";err.hidden=false}
+}
+renderForm();
+try{const c=new URLSearchParams(location.search).get("codigo");if(c)$("#codigo").value=c.toUpperCase()}catch(x){}
+
+</script>
+</body>
+</html>

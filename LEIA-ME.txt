@@ -1,0 +1,69 @@
+FEEDBACK DE LIDERANÇA · SUDATI — Como colocar no ar
+=====================================================
+
+O QUE TEM NESTE PACOTE
+- site/ ................................ Tudo o que sobe no GitHub (formulário + painel do RH)
+    index.html .......................... Formulário (o que as pessoas respondem)
+    painel.html ......................... Painel do RH (pede e-mail e senha)
+    js/config.js ........................ Onde você cola o firebaseConfig  <-- EDITAR
+    js/perguntas.js, js/painel.js, css/, logo.png
+- firestore.rules ...................... Regras de segurança do banco     <-- EDITAR e colar no Firebase
+- NAO_SUBIR_NO_GITHUB/disc-luiany.json . DISC e hipóteses. NUNCA suba no GitHub.
+                                         Você carrega este arquivo pelo painel (aba DISC).
+
+PASSO 1 · FIREBASE: CRIAR O APP WEB
+1. console.firebase.google.com > seu projeto (ou Adicionar projeto: feedback-sudati).
+2. Configurações do projeto (engrenagem) > Seus apps > ícone Web </> > nome "feedback".
+   NÃO marque Firebase Hosting.
+3. Copie os valores do bloco firebaseConfig e cole em site/js/config.js, no lugar de COLE_AQUI.
+
+PASSO 2 · FIRESTORE (BANCO)
+1. Firestore Database > Criar banco de dados > região southamerica-east1 (São Paulo) > modo de PRODUÇÃO.
+
+PASSO 3 · REGRAS DE SEGURANÇA
+1. Abra firestore.rules num bloco de notas e troque:
+   - SEU_EMAIL@sudati.com.br / OUTRO_EMAIL@sudati.com.br pelos e-mails do RH que podem ver as respostas.
+   - TROQUE_O_CODIGO pelo código do convite, em MAIÚSCULAS (ex.: QUALI2026).
+2. Firestore > Regras > apague o que estiver lá, cole o arquivo inteiro > Publicar.
+
+PASSO 4 · LOGIN DO RH
+1. Authentication > Começar > E-mail/senha > Ativar.
+2. Authentication > Configurações > Ações do usuário > DESMARQUE "Ativar criação (inscrição)".
+3. Authentication > Usuários > Adicionar usuário > seu e-mail e uma senha forte.
+   (Repita para cada pessoa do RH. O e-mail também precisa estar no firestore.rules.)
+
+PASSO 5 · GITHUB PAGES
+1. GitHub > New repository > nome: feedback > Create.
+2. Add file > Upload files > arraste o CONTEÚDO da pasta site/ (index.html, painel.html, js, css, logo.png) > Commit.
+3. Settings > Pages > Branch: main / (root) > Save. Em 1-2 min o site fica em:
+   https://SEU_USUARIO.github.io/feedback/          (formulário)
+   https://SEU_USUARIO.github.io/feedback/painel.html (painel do RH)
+4. Firebase > Authentication > Configurações > Domínios autorizados > Adicionar domínio:
+   SEU_USUARIO.github.io
+
+PASSO 6 · CARREGAR O DISC (uma vez)
+1. Abra o painel, entre com seu login, vá na aba DISC.
+2. Em "Carregar arquivo do DISC", escolha NAO_SUBIR_NO_GITHUB/disc-luiany.json.
+   Pronto: as hipóteses aparecem no relatório.
+
+PASSO 7 · TESTAR ANTES DE MANDAR
+[ ] Responda uma vez como cada grupo (equipe, pares e outras áreas, gestor).
+[ ] Tente enviar com um código errado: tem que dar "O código de acesso não confere".
+[ ] Entre no painel: as respostas e os indicadores aparecem.
+[ ] Abra o painel numa janela anônima sem login: não aparece nada.
+[ ] Apague as respostas de teste em Firestore > Dados > respostas.
+
+LINK DO CONVITE
+Você pode mandar o link já com o código preenchido:
+https://SEU_USUARIO.github.io/feedback/?codigo=QUALI2026
+
+ROTEIRO DA CONVERSA
+No painel > Roteiro da conversa > "Copiar pedido para o Claude" > cole numa conversa com o Claude >
+copie a resposta dele > cole no campo > Salvar roteiro.
+
+SEGURANÇA, EM RESUMO
+- Quem responde só consegue ENVIAR, e só com o código certo. Ninguém lê, edita ou apaga.
+- Só os e-mails listados nas regras leem respostas e DISC. Ninguém consegue se cadastrar sozinho.
+- O DISC não está no código do site: fica no Firebase, protegido pelo login.
+- As respostas não guardam nome, e-mail nem IP de quem respondeu.
+- O login do painel expira ao fechar o navegador.

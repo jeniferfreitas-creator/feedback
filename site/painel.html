@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Painel do RH · Feedback de Liderança</title>
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="css/estilo.css">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+</head>
+<body>
+<canvas id="topo" aria-hidden="true"></canvas>
+<div class="glow" aria-hidden="true"></div>
+<div class="wrap">
+  
+  <header class="hero">
+    <img class="logo" alt="Sudati MDF" src="logo.png">
+    <span class="eyebrow">Painel do RH · acesso restrito</span>
+    <h1 id="titulo">Relatório de feedback</h1>
+    
+    
+  </header>
+
+  <form class="card login" id="login" hidden>
+    <h2>Entrar</h2>
+    <p class="muted">Acesso só para o RH. Use o e-mail e a senha cadastrados no Firebase.</p>
+    <label class="f">E-mail<input id="lg_email" type="email" autocomplete="username" required></label>
+    <label class="f">Senha<input id="lg_senha" type="password" autocomplete="current-password" required></label>
+    <p class="err" id="lg_err" hidden></p>
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+  <div id="app" hidden style="display:grid;gap:18px">
+    <div class="topbar">
+      <nav class="tabs" id="tabs">
+        <button id="tab-painel" aria-selected="true">Relatório</button>
+        <button id="tab-roteiro" aria-selected="false">Roteiro da conversa</button>
+        <button id="tab-config" aria-selected="false">DISC</button>
+      </nav>
+      <button class="btn ghost" type="button" id="sair">Sair</button>
+    </div>
+    <p class="msg" id="aviso" hidden></p>
+    <section id="v-painel" style="display:grid;gap:18px"></section>
+    <section id="v-roteiro" hidden style="display:grid;gap:18px"></section>
+    <section id="v-config" hidden style="display:grid;gap:18px"></section>
+  </div>
+</div>
+<script src="js/config.js"></script>
+<script src="js/perguntas.js"></script>
+<script src="js/painel.js"></script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,setPersistence,browserSessionPersistence} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,doc,onSnapshot,setDoc,query,orderBy} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app=initializeApp(window.SITE_CONFIG.firebase);
+const auth=getAuth(app),db=getFirestore(app);
+await setPersistence(auth,browserSessionPersistence);
+const $=s=>document.querySelector(s);
+let parar=[];
+window.fbSalvarRH=dados=>setDoc(doc(db,"rh","dados"),dados,{merge:true});
+$("#login").onsubmit=async e=>{e.preventDefault();$("#lg_err").hidden=true;
+  try{await signInWithEmailAndPassword(auth,$("#lg_email").value.trim(),$("#lg_senha").value)}
+  catch(x){$("#lg_err").textContent="E-mail ou senha incorretos.";$("#lg_err").hidden=false}};
+$("#sair").onclick=()=>signOut(auth);
+onAuthStateChanged(auth,u=>{
+  parar.forEach(f=>f());parar=[];
+  $("#login").hidden=!!u;$("#app").hidden=!u;
+  if(!u)return;
+  const negado=()=>{$("#aviso").hidden=false;$("#aviso").textContent="Este e-mail entrou, mas não tem permissão para ver as respostas. Peça para incluir o e-mail nas regras do Firestore."};
+  parar.push(onSnapshot(doc(db,"rh","dados"),s=>window.painel.aplicarRH(s.data()||{}),negado));
+  parar.push(onSnapshot(query(collection(db,"respostas"),orderBy("criadoEm")),s=>window.painel.aplicarRespostas(s.docs.map(d=>{const x=d.data();x.em=x.criadoEm?.toDate?.().toISOString();return x})),negado));
+  window.painel.aba("painel");
+});
+</script>
+</body>
+</html>
