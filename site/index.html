@@ -8,7 +8,7 @@
 <link rel="icon" href="logo.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="css/estilo.css">
-<style>[hidden]{display:none!important}body{margin:0}</style>
+<style>[hidden]{display:none!important}body{margin:0}.cont{font-size:.78rem;color:var(--muted)}.cont.ok{color:var(--good)}</style>
 </head>
 <body>
 <canvas id="topo" aria-hidden="true"></canvas>
@@ -56,14 +56,13 @@ function renderForm(){
   $("#form").innerHTML=`
   <div class="part">
     <span class="eyebrow">Para começar</span>
-    <div class="q codigo"><label class="lbl" for="codigo">Código de acesso</label><span class="hint">Está na mensagem de convite que você recebeu do RH.</span><input id="codigo" autocomplete="off" autocapitalize="characters" placeholder="Digite o código"></div>
     <div class="q"><span class="lbl">Qual é a sua relação com ela?</span>
     <div class="grupos">${GRUPOS.map((g,i)=>`<input type="radio" name="grupo" id="g${i}" value="${g.v}"><label for="g${i}">${ICONES[g.set]}<b>${NOMEG[g.set]}</b><span>${SUBT[g.set]}</span></label>`).join("")}</div>
     <span class="hint">As perguntas mudam conforme a sua escolha.</span></div>
   </div>
   <div id="qs" style="display:grid;gap:18px"></div>`;
-  $("#form").onchange=e=>{const mq=e.target.name?.match(/^q_(.+)$/);if(mq){const q=TODOS_Q[mq[1]];const lb=$("#exl_"+mq[1]);if(q&&lb&&!q.row){const ob=exigeEx(q,e.target.value);lb.textContent=ob?"Conte o que aconteceu (obrigatório para essa resposta)":(q.ex||"Quer contar um exemplo?")+" (opcional)";lb.style.color=ob?"var(--hyp)":"";lb.style.fontWeight=ob?"600":""}}if(e.target.name==="grupo"){renderQs(setDe(e.target.value));$("#progress").hidden=false;setTimeout(()=>$("#qs").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}),60)}progresso()};
-  $("#form").oninput=progresso;
+  $("#form").onchange=e=>{const mq=e.target.name?.match(/^q_(.+)$/);if(mq){const q=TODOS_Q[mq[1]];const lb=$("#exl_"+mq[1]);if(q&&lb&&!q.row){const ob=exigeEx(q,e.target.value);lb.textContent=ob?"Conte o que aconteceu (obrigatório para essa resposta)":(q.ex||"Quer contar um exemplo?")+" (opcional)";lb.style.color=ob?"var(--hyp)":"";lb.style.fontWeight=ob?"600":"";const ct=document.querySelector(`.cont[data-for="ex_${mq[1]}"]`);if(ct)ct.hidden=!ob}}if(e.target.name==="grupo"){renderQs(setDe(e.target.value));$("#progress").hidden=false;setTimeout(()=>$("#qs").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}),60)}progresso()};
+  $("#form").oninput=e=>{progresso();const ct=document.querySelector(`.cont[data-for="${e.target.id}"]`);if(ct){const n=e.target.value.trim().length,m=+ct.dataset.min;ct.textContent=n>=m?"✓ Ok":`Mínimo de ${m} caracteres · faltam ${m-n}`;ct.classList.toggle("ok",n>=m)}};
   $("#form").onsubmit=enviar;
 }
 
@@ -74,9 +73,9 @@ function renderQs(set){
     <div class="q"><span class="lbl">Com que frequência vocês trabalham juntos?</span><div class="opts row">${CONTATO.map((g,i)=>`<input type="radio" name="contato" id="k${i}" value="${g}"><label for="k${i}">${g}</label>`).join("")}</div></div>
   </div>
   ${SETS[set].map(p=>`<div class="part"><span class="eyebrow">${p.t}</span>${p.qs.map(q=>{n++;return q.tipo==="txt"
-    ?`<label class="q" for="q_${q.id}"><span class="lbl"><span class="qn">${String(n).padStart(2,"0")}</span>${q.l}</span>${q.h?`<span class="hint">${q.h}</span>`:""}${q.curto?`<input id="q_${q.id}" placeholder="Escreva aqui">`:`<textarea id="q_${q.id}" placeholder="Escreva aqui"></textarea>`}</label>`
+    ?`<label class="q" for="q_${q.id}"><span class="lbl"><span class="qn">${String(n).padStart(2,"0")}</span>${q.l}</span>${q.h?`<span class="hint">${q.h}</span>`:""}${q.curto?`<input id="q_${q.id}" placeholder="Escreva aqui">`:`<textarea id="q_${q.id}" placeholder="Escreva aqui"></textarea>`}${q.opc?"":`<small class="cont" data-for="q_${q.id}" data-min="${q.curto?3:10}">Mínimo de ${q.curto?3:10} caracteres</small>`}</label>`
     :`<div class="q"><span class="lbl"><span class="qn">${String(n).padStart(2,"0")}</span>${q.l}</span>${q.h?`<span class="hint">${q.h}</span>`:""}<div class="opts${q.row?" scale":""}">${opcoes(q).map((o,i)=>`<input type="radio" name="q_${q.id}" id="q_${q.id}_${i}" value="${o}"><label for="q_${q.id}_${i}">${o}</label>`).join("")}</div>${q.row?'<div class="scale-legend"><span>0 · nada</span><span>10 · totalmente</span></div>':""}
-      <label class="hint" for="ex_${q.id}" id="exl_${q.id}">${q.ex||"Quer contar um exemplo?"} (opcional)</label><textarea class="ex" id="ex_${q.id}" placeholder="O que aconteceu, quando, qual foi o efeito"></textarea></div>`}).join("")}</div>`).join("")}
+      <label class="hint" for="ex_${q.id}" id="exl_${q.id}">${q.ex||"Quer contar um exemplo?"} (opcional)</label><textarea class="ex" id="ex_${q.id}" placeholder="O que aconteceu, quando, qual foi o efeito"></textarea><small class="cont" data-for="ex_${q.id}" data-min="10" hidden>Mínimo de 10 caracteres</small></div>`}).join("")}</div>`).join("")}
   <div class="envio"><p class="err" id="ferr" hidden></p>
   <button class="btn" type="submit">Enviar feedback <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>`;
 }
@@ -119,23 +118,21 @@ async function enviar(e){
   e.preventDefault();
   const err=$("#ferr");if(!err)return;err.hidden=true;
   const val=n=>document.querySelector(`[name="${n}"]:checked`)?.value||"";
-  const r={grupo:val("grupo"),contato:val("contato"),codigo:$("#codigo").value.trim().toUpperCase()};
+  const r={grupo:val("grupo"),contato:val("contato")};
   const set=setDe(r.grupo);
   const falta=[];
-  if(!r.codigo)falta.push("o código de acesso (está no convite)");
   if(!r.contato)falta.push("a frequência de contato");
   todasDe(set).forEach((q,i)=>{
     if(q.tipo==="txt"){const v=$("#q_"+q.id).value.trim();r[q.id]=v;if(!q.opc&&v.length<(q.curto?3:10))falta.push("a pergunta "+(i+1))}
     else{r[q.id]=val("q_"+q.id);r[q.id+"_ex"]=$("#ex_"+q.id).value.trim();if(!r[q.id])falta.push("a pergunta "+(i+1));else if(exigeEx(q,r[q.id])&&r[q.id+"_ex"].length<10)falta.push("o exemplo da pergunta "+(i+1))}
   });
-  if(falta.length){err.textContent="Falta responder: "+falta.join(", ")+". Nas perguntas abertas, e no exemplo quando ele é pedido, escreva pelo menos uma frase.";err.hidden=false;return}
+  if(falta.length){err.textContent="Falta responder: "+falta.join(", ")+". Nas perguntas abertas (e no exemplo, quando ele é pedido) escreva pelo menos 10 caracteres.";err.hidden=false;return}
   const btn=e.submitter||$("#form button[type=submit]");if(btn)btn.disabled=true;
   try{await window.fbEnviar(r);$("#form").hidden=true;$("#progress").hidden=true;const d=$("#done");d.hidden=false;
     d.innerHTML=`<svg class="ok" viewBox="0 0 84 84"><circle cx="42" cy="42" r="38"/><path d="M27 43l10 10 20-22"/></svg><h2>Obrigado!</h2><p class="muted" style="max-width:44ch">Seu feedback foi enviado e vai ajudar a ${esc(NOME_AVALIADA)} a crescer como líder. Você já pode fechar esta página.</p>`;d.scrollIntoView({block:"center"});}
-  catch(x){if(btn)btn.disabled=false;err.textContent=x&&x.code==="permission-denied"?"O código de acesso não confere. Confira o código no convite e tente de novo.":"Não foi possível enviar agora. Verifique a internet e tente de novo.";err.hidden=false}
+  catch(x){if(btn)btn.disabled=false;err.textContent="Não foi possível enviar agora. Verifique a internet e tente de novo.";err.hidden=false}
 }
 renderForm();
-try{const c=new URLSearchParams(location.search).get("codigo");if(c)$("#codigo").value=c.toUpperCase()}catch(x){}
 
 </script>
 </body>
